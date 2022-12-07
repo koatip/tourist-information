@@ -25,15 +25,17 @@ export default function Attractions() {
 
   function makeStatistic(attractionList) {
     let countAll = 0, priceAll = 0;
-    const stat = attractionList.reduce((obj, item) => {
-      const { settlement, price } = item
-      countAll++;
-      priceAll += price;
-      obj[settlement] = obj[settlement]
-        ? { count: obj[settlement].count + 1, price: obj[settlement].price + price }
-        : { count: 1, price }
-      return obj
-    }, {})
+    const stat = {}
+    attractionList.forEach(({settlement, price}) => {
+      if (stat[settlement]) {
+        stat[settlement].count++
+        stat[settlement].price += price
+      } else {
+        stat[settlement] = { count: 1, price }
+      }
+      countAll++
+      priceAll += price
+    });
 
     setStatistic(stat)
     setSum([countAll, Math.round(priceAll / countAll) || 0])
