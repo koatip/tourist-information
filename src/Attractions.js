@@ -24,19 +24,27 @@ export default function Attractions() {
   }
 
   function makeStatistic(attractionList) {
-    let countAll = 0, priceAll = 0;
-    const stat = {}
-    attractionList.forEach(({settlement, price}) => {
-      if (stat[settlement]) {
-        stat[settlement].count++
-        stat[settlement].price += price
-      } else {
-        stat[settlement] = { count: 1, price }
+    const settlementList = attractionList.map(item => item.settlement)
+    let settlements = []
+    for (const settlement of settlementList) {
+      if (!settlements.includes(settlement)) {
+        settlements.push(settlement)
       }
-      countAll++
+    }
+    let countAll = 0;
+    let priceAll = 0;
+    const stat = settlements.map(settlement => {
+      const cities = attractionList.filter(item => item.settlement === settlement)
+      const count = cities.length;
+      const price = cities.reduce((sum, item) => sum + parseInt(item.price), 0)
+      countAll += count
       priceAll += price
-    });
-
+      return {
+        name: settlement,
+        count,
+        price
+      }
+    })
     setStatistic(stat)
     setSum([countAll, Math.round(priceAll / countAll) || 0])
   }
@@ -81,9 +89,9 @@ export default function Attractions() {
 
       <Select name="settlement" handleChange={handleChange} label="Település">
         <option value="">Válassz..</option>
-        {Object.keys(statistic).map(settlement  => (
-          <option key={settlement} value={settlement}>
-            {settlement}
+        {statistic.map(settlement  => (
+          <option key={settlement.name} value={settlement.name}>
+            {settlement.name}
           </option>
         ))}
       </Select>
@@ -134,11 +142,11 @@ export default function Attractions() {
           </tr>
         </thead>
         <tbody>
-          {Object.keys(statistic).map(settlement => (
-            <tr key={settlement}>
-              <td>{settlement}</td>
-              <td>{statistic[settlement].count}</td>
-              <td>{Math.round(statistic[settlement].price / statistic[settlement].count)}</td>
+          {statistic.map(settlement => (
+            <tr key={settlement.name}>
+              <td>{settlement.name}</td>
+              <td>{settlement.count}</td>
+              <td>{Math.round(settlement.price / settlement.count)}</td>
             </tr>
           ))}
         </tbody>
