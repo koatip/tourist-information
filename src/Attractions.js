@@ -10,17 +10,32 @@ export default function Attractions() {
   const [attractions, setAttractions] = useState([])
   const [statistic, setStatistic] = useState([])
   const [sum, setSum] = useState([0, 0])
+  const [settlement, setSettlement] = useState('')
+  const [restaurant, setRestaurant] = useState(false)
 
   const attractionsRef = collection(db, "attractions")
 
-  async function getData(queryRef) {
-    const querySnapshot = await getDocs(queryRef)
+  async function getData() {
+    const querySnapshot = await getDocs(getQuery())
     const attractionList = querySnapshot.docs.map(doc => {
       return { ...doc.data(), id: doc.id }
     })
 
     setAttractions(attractionList)
     return attractionList
+  }
+
+  function getQuery() {
+    if (settlement && restaurant) {
+      return query(attractionsRef, where("settlement", "==", settlement),  where("category", "==", "étterem"))
+    } 
+    if (settlement) {
+      return query(attractionsRef, where("settlement", "==", settlement))
+    } 
+    if (restaurant) {
+      return query(attractionsRef, where("category", "==", "étterem"))
+    } 
+    return attractionsRef
   }
 
   function makeStatistic(attractionList) {
@@ -50,8 +65,12 @@ export default function Attractions() {
   }
 
   useEffect(() => {
-    getData(attractionsRef).then(makeStatistic)
+    getData().then(makeStatistic)
   }, [])
+
+  useEffect(() => {
+    getData()
+  }, [settlement, restaurant])
 
   function handleDelete(id) {
     deleteDoc(doc(db, "attractions", id))
@@ -60,23 +79,11 @@ export default function Attractions() {
   }
 
   function handleChange(event) {
-    const value = event.target.value
-    if (value === "") {
-      getData(attractionsRef)
-    } else {
-      const queryRef = query(attractionsRef, where("settlement", "==", value))
-      getData(queryRef)
-    }
+    setSettlement(event.target.value)
   }
 
   function handleCheckChange(event) {
-    const checked = event.target.checked
-    if (checked) {
-      const queryRef = query(attractionsRef, where("category", "==", "étterem"))
-      getData(queryRef)
-    } else {
-      getData(attractionsRef)
-    }
+    setRestaurant(event.target.checked)
   }
 
   return (
